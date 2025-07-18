@@ -1,1 +1,1 @@
-rabbit,marmot,chipmunk,mouse,ground squirrel,
+rabbit,marmot,mouse,ground squirrel

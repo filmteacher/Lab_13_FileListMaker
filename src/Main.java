@@ -1,28 +1,22 @@
 import javax.swing.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class fileListMaker {
-    /**
-     * @param args the command line arguments
-     */
-
 //For this lab, you will extend the list Maker program you created in Lab 11 to allow the user to load and save list files from disk.
 // This will give you practice with the Java file operations and creating a central system in main that handles file exceptions thrown from static support methods.
 // And, you will explore program “state” which we use here to ensure that no data is lost by closing a file. etc.
 
-    public static void main(String[] args) {
+public class Main {
+    static boolean needsToBeSaved = false;
 
+    public static void main(String[] args) {
         //Initialize variables
         boolean quit = false;
-        ArrayList<String> yourList = new ArrayList();
+        ArrayList<String> yourList = new ArrayList<>();
 
         //Menu-driven loop until user inputs Quit command
         do {
@@ -61,10 +55,11 @@ public class fileListMaker {
                         if (confirm) {
                             saveList(yourList);
                         }
-                        openList(yourList);
-                        break;
                     }
-                    //S – Save the current list file to disk
+                    yourList.clear(); // Clear the current list before loading a new one
+                    openList(yourList);
+                    break;
+                //S – Save the current list file to disk
                 case "S":
                     saveList(yourList);
                     break;
@@ -85,19 +80,10 @@ public class fileListMaker {
         } while (!quit);
     }
 
-    class Reference
-    {
-        //The big challenge here is to keep track of the program state:
-        //Use a Boolean variable like needsToBeSaved to keep track of list edits.
-        //I had to look up the reference class and how to use it online to make this global.
-        public static boolean needsToBeSaved = false;
-    }
-
     //private static String menu()
     //You will want to display the current list along with the menu of options so the user can see what they are doing.
     //gets input from the user
-    private static String menu()
-    {
+    private static String menu() {
         Scanner in = new Scanner(System.in);
         String input = "";
         System.out.println("\nA – Add an item to the list");
@@ -115,12 +101,10 @@ public class fileListMaker {
 
     //You need to display a numbered version of the list to allow users to pick list elements for deletion.
     // Here the user looks at the display and then indicates the item to delete by the number.
-    private static void numList(ArrayList<String> theList)
-    {
+    private static void numList(ArrayList<String> theList) {
         System.out.println("");
-        for(int x = 0; x < theList.size(); ++x)
-        {
-            System.out.println(x + 1 + ": " + (String)theList.get(x));
+        for (int x = 0; x < theList.size(); ++x) {
+            System.out.println(x + 1 + ": " + (String) theList.get(x));
         }
     }
 
@@ -128,15 +112,11 @@ public class fileListMaker {
     //confirm that they want to quit
     //print the final list
     //return true if they want to quit to set the quit variable
-    private static boolean quitList(ArrayList<String> theList)
-    {
+    private static boolean quitList(ArrayList<String> theList) {
         boolean confirm = SafeInput.getYNConfirm(new Scanner(System.in), "Are you sure you want to quit? ");
-        if (!confirm)
-        {
+        if (!confirm) {
             return false;
-        }
-        else
-        {
+        } else {
             System.out.println("\nThank you. This is your final list:");
             System.out.println(theList);
             return true;
@@ -145,8 +125,7 @@ public class fileListMaker {
 
     //private static void viewlist()
     //view the list
-    private static void viewList(ArrayList<String> theList)
-    {
+    private static void viewList(ArrayList<String> theList) {
         System.out.println("\nThis is your list so far:");
         System.out.println(theList);
     }
@@ -155,8 +134,7 @@ public class fileListMaker {
     //user inputs the item
     //add to the list
     //print the list
-    private static void addItem(ArrayList<String> theList)
-    {
+    private static void addItem(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
         String item = "";
         item = SafeInput.getNonZeroLenString(in, "Type in the item you want to add");
@@ -164,7 +142,7 @@ public class fileListMaker {
         System.out.println("\nThis is your list so far:");
         System.out.println(theList);
         //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-        Reference.needsToBeSaved = true;
+        needsToBeSaved = true;
     }
 
     //private static void deleteItem()
@@ -174,30 +152,23 @@ public class fileListMaker {
     //confirm they want to delete the item
     //delete item from the list
     //print the list
-    private static void deleteItem(ArrayList<String> theList)
-    {
+    private static void deleteItem(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
         int item = 0;
         boolean confirm = false;
         numList(theList);
-        if (theList.isEmpty())
-        {
+        if (theList.isEmpty()) {
             System.out.println("\nThere is nothing to delete!");
-        }
-        else
-        {
+        } else {
             item = SafeInput.getRangedInt(in, "Enter the number of the item you want to delete", 1, theList.size());
-            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to delete item " + item + ": " + (String)theList.get(item - 1) + "? ");
-            if (confirm)
-            {
+            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to delete item " + item + ": " + (String) theList.get(item - 1) + "? ");
+            if (confirm) {
                 theList.remove(item - 1);
                 System.out.println("\nThis is your list after deleting the item:");
                 System.out.println(theList);
                 //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-                Reference.needsToBeSaved = true;
-            }
-            else
-            {
+                needsToBeSaved = true;
+            } else {
                 System.out.println("\nItem was not deleted!");
             }
         }
@@ -210,32 +181,25 @@ public class fileListMaker {
     //confirm they want to insert the item at the location
     //insert item into the list at the location
     //print the list
-    private static void insertItem(ArrayList<String> theList)
-    {
+    private static void insertItem(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
         int location = 0;
         String item = "";
         boolean confirm = false;
         numList(theList);
-        if (theList.isEmpty())
-        {
+        if (theList.isEmpty()) {
             System.out.println("\nThe list is empty. You need to add items before you can insert them!");
-        }
-        else
-        {
+        } else {
             location = SafeInput.getRangedInt(in, "Enter the number of the list item you want to insert a new item before", 1, theList.size());
             item = SafeInput.getNonZeroLenString(in, "Type in the item you want to insert");
-            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to insert " + item + " before " + location + ":" + (String)theList.get(location - 1) + "? ");
-            if (confirm)
-            {
+            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to insert " + item + " before " + location + ":" + (String) theList.get(location - 1) + "? ");
+            if (confirm) {
                 theList.add(location - 1, item);
                 System.out.println("\nThis is your list after inserting the item:");
                 System.out.println(theList);
                 //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-                Reference.needsToBeSaved = true;
-            }
-            else
-            {
+                needsToBeSaved = true;
+            } else {
                 System.out.println("\nItem was not inserted!");
             }
         }
@@ -246,28 +210,21 @@ public class fileListMaker {
     //if the list is empty, let them know they need to add items first
     //confirm they want to clear the list
     //notify them that the list is now empty
-    private static void clearList(ArrayList<String> theList)
-    {
+    private static void clearList(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
         int item = 0;
         boolean confirm = false;
         numList(theList);
-        if (theList.isEmpty())
-        {
+        if (theList.isEmpty()) {
             System.out.println("\nThere is nothing in the list to clear!");
-        }
-        else
-        {
+        } else {
             confirm = SafeInput.getYNConfirm(in, "Are you sure you want to clear all items from the list? ");
-            if (confirm)
-            {
+            if (confirm) {
                 theList.clear();
                 System.out.println("\nYour list is now empty.");
                 //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-                Reference.needsToBeSaved = true;
-            }
-            else
-            {
+                needsToBeSaved = true;
+            } else {
                 System.out.println("\nThe list was not cleared!");
             }
         }
@@ -284,36 +241,29 @@ public class fileListMaker {
     //confirm they want to move the item to the location
     //insert item into the list at the location
     //print the list
-    private static void moveItem(ArrayList<String> theList)
-    {
+    private static void moveItem(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
         int startLocation = 0;
         int endLocation = 0;
         String item = "";
         boolean confirm = false;
         numList(theList);
-        if (theList.isEmpty())
-        {
+        if (theList.isEmpty()) {
             System.out.println("\nThe list is empty. You need to add items before you can move them!");
-        }
-        else
-        {
+        } else {
             startLocation = SafeInput.getRangedInt(in, "Enter the number of the list item you want to move", 1, theList.size());
             item = theList.get(startLocation - 1);
             theList.remove(startLocation - 1);
             numList(theList);
             endLocation = SafeInput.getRangedInt(in, "Enter the number of the list item you want to move " + item + " before", 1, theList.size());
-            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to move " + item + " before " + endLocation + ":" + (String)theList.get(endLocation - 1) + "? ");
-            if (confirm)
-            {
+            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to move " + item + " before " + endLocation + ":" + (String) theList.get(endLocation - 1) + "? ");
+            if (confirm) {
                 theList.add(endLocation - 1, item);
                 System.out.println("\nThis is your list after moving the item:");
                 System.out.println(theList);
                 //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-                Reference.needsToBeSaved = true;
-            }
-            else
-            {
+                needsToBeSaved = true;
+            } else {
                 theList.add(startLocation - 1, item);
                 System.out.println("\nItem was not moved!");
             }
@@ -335,53 +285,45 @@ public class fileListMaker {
     //print the list
     //If the user loads a list, it does not need to be saved until it is changed by adding or deleting items.
     // (The user could load a list only to view it and then would want to load another in its place without saving…)
-    private static void openList(ArrayList<String> theList)
-    {
-            JFileChooser chooser = new JFileChooser();
-            Scanner inFile;
-            String line;
-            Path target = new File(System.getProperty("user.dir")).toPath();
-            target = target.resolve("src");
-            // set the chooser to the project src directory
-            chooser.setCurrentDirectory(target.toFile());
+    private static void openList(ArrayList<String> theList) {
+        JFileChooser chooser = new JFileChooser();
+        Scanner inFile;
+        String line;
+        Path target = new File(System.getProperty("user.dir")).toPath();
+        target = target.resolve("src");
+        // set the chooser to the project src directory
+        chooser.setCurrentDirectory(target.toFile());
 
-            try  // Code that might trigger the exception goes here
-            {
-                if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
-                {
-                    target = chooser.getSelectedFile().toPath();  // this is a File object not a String filename
-                    inFile = new Scanner(target);
+        try  // Code that might trigger the exception goes here
+        {
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                target = chooser.getSelectedFile().toPath();  // this is a File object not a String filename
+                inFile = new Scanner(target);
 
-                    while (inFile.hasNextLine())
-                    {
-                        line = inFile.nextLine();
-                        String[] items = line.split(",");
-                        for (String item : items)
-                        {
-                            theList.add(item);
-                        }
+                while (inFile.hasNextLine()) {
+                    line = inFile.nextLine();
+                    String[] items = line.split(",");
+                    for (String item : items) {
+                        theList.add(item.trim());
                     }
+                }
 
-                    inFile.close();
-                    viewList(theList);
-                    return;
-                }
-                else   // User did not pick a file, closed the chooser
-                {
-                    System.out.println("Sorry, you must select a file! Terminating!");
-                    return;
-                }
-            }
-            catch (FileNotFoundException ex)
+                inFile.close();
+                viewList(theList);
+                needsToBeSaved = false;
+                return;
+            } else   // User did not pick a file, closed the chooser
             {
-                System.out.println("File Not Found Error");
-                ex.printStackTrace();
+                System.out.println("Sorry, you must select a file! Terminating!");
+                return;
             }
-            catch (IOException ex) // code to handle this exception
-            {
-                System.out.println("IOException Error");
-                ex.printStackTrace();
-            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("File Not Found Error");
+            ex.printStackTrace();
+        } catch (IOException ex) // code to handle this exception
+        {
+            System.out.println("IOException Error");
+            ex.printStackTrace();
         }
     }
 
@@ -393,32 +335,34 @@ public class fileListMaker {
     //write each item in the list to the file, separated by commas
     //If the user loads a list, it does not need to be saved until it is changed by adding or deleting items.
     // (The user could load a list only to view it and then would want to load another in its place without saving…)
-    private static void saveList(ArrayList<String> theList)
-    {
+    private static void saveList(ArrayList<String> theList) {
         //prompt for the file name (add the .csv extension)
         //(Code the JFileChooser to open in the src directory of the IntelliJ project.)
         Path target = new File(System.getProperty("user.dir")).toPath();
         target = target.resolve("src");
-        Path fileLocation= getOutputPath(target.toString());
+        Path fileLocation = getOutputPath(target.toString());
+
+        if (fileLocation == null) {
+            System.out.println("Save cancelled.");
+            return;
+        }
 
         //Write the data into the csv file which should be in the src directory of the intelliJ project.
         //This was the syntax in the cookbook, couldn't get the CREATE syntax from the lecture to work
         try (BufferedWriter writer =
-                     Files.newBufferedWriter(fileLocation, Charset.forName("UTF-8")))
-        {
-            for (String rec : theList)
-            {
-                writer.write(rec, 0, rec.length());  // stupid syntax for write rec
-                // 0 is where to start (1st char) the write
-                // rec. length() is how many chars to write (all)
-                writer.write(",");  // adds the comma
+                     Files.newBufferedWriter(fileLocation, Charset.forName("UTF-8"))) {
+            for (int i = 0; i < theList.size(); i++) {
+                writer.write(theList.get(i));
+                if (i < theList.size() - 1) {
+                    writer.write(",");
+                }
             }
             writer.close(); // must close the file to seal it and flush buffer
             System.out.println("Data file written!");
+            needsToBeSaved = false;
         }
         // This was also a little different in the cookbook - ex instead of e
-        catch (IOException ex)
-        {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -429,42 +373,9 @@ public class fileListMaker {
         int returnVal = jd.showSaveDialog(null);
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return null;
-        }
-        else {
+        } else {
             return jd.getSelectedFile().toPath();
         }
 
     }
-
-//•	Loaded lists are always saved with the same filename.
-//•	All list files have the .txt extension
-//
-//Static support methods that use the Java NIO methods must throw the usual File exceptions. (IOException, FileNotFoundException)
-//You must implement the usual try catch block in main and call these static methods from within the try block there.
-//Some analysis will show that you have some common static functions for handling the file operations.
-//For instance, don’t write the same code in several menu cases to save the file.
-//Instead, create the static method saveFile(…) and use it in the menu methods that need it.
-//
-//4.	Provide a series of screenshots that document and establish that your program will 'do' the following:
-//
-//a.	Will load a list from disk
-//Paste your screenshots here:
-//
-//b.	 Will save a list loaded from disk that has been modified by deleting or adding items using the same filename, so it overwrites the file.
-// Reload the changed file to clearly show that you were able to save the changes
-//Paste your screenshots here:
-//
-//c.	Will allow the user to create a new list and save it to disk with a provided base name. List files should have the .txt extension.
-//Paste your screenshot here:
-//
-//d.	Bullet proof the program so that a user can't lose data. If they ask to load a file but have an unsaved list in memory, prompt them to first save the list.
-//Paste your screenshot here:
-//
-//e.	Bullet proof the program so that a user can't lose data. If they go to quit the program and have an unsaved list prompt them to save it.
-//Paste your screenshot here:
-//
-//Criteria:
-//Try Catch Block and Methods throw Exceptions: Code uses a central Try Catch Block and Methods throw Exceptions
-//Code Handles the Dirty File correctly: The Dirty status is used so data is never lost inadvertently.
-//Overall: Code is cleanly structured with an outer do while repeat loop and a CMD switch case structure. Menu options are implemented as specific methods.
-//Example Runs are Complete: The submitted screen shots clearly show the creation of a list and saving it to disk and then reopening it.
+}
