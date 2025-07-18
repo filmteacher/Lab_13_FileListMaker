@@ -213,23 +213,28 @@ public class Main {
     //notify them that the list is now empty
     private static void clearList(ArrayList<String> theList) {
         Scanner in = new Scanner(System.in);
-        int item = 0;
-        boolean confirm = false;
-        numList(theList);
         if (theList.isEmpty()) {
             System.out.println("\nThere is nothing in the list to clear!");
-        } else {
-            confirm = SafeInput.getYNConfirm(in, "Are you sure you want to clear all items from the list? ");
-            if (confirm) {
-                theList.clear();
-                System.out.println("\nYour list is now empty.");
-                //Any operations that change the list, add, insert, delete, and move all need to set the dirty flag because the changed file must be saved or data will be lost.
-                needsToBeSaved = true;
-            } else {
-                System.out.println("\nThe list was not cleared!");
+            return;
+        }
+
+        if (needsToBeSaved) {
+            boolean saveFirst = SafeInput.getYNConfirm(in, "You have unsaved changes. Do you want to save the list first?");
+            if (saveFirst) {
+                saveList(theList);
             }
         }
+
+        boolean confirm = SafeInput.getYNConfirm(in, "Are you sure you want to clear all items from the list?");
+        if (confirm) {
+            theList.clear();
+            System.out.println("\nYour list is now empty.");
+            needsToBeSaved = false;  // List is empty, so no need to save
+        } else {
+            System.out.println("\nThe list was not cleared!");
+        }
     }
+
 
     //private static void moveItem()
     //print the list
@@ -295,8 +300,6 @@ public class Main {
                     System.out.println("\nYour list was not saved.");
                 }
             }
-            // Clear the current list before loading a new oneJFileChooser chooser = new JFileChooser();
-            theList.clear();
 
             JFileChooser chooser = new JFileChooser();
             Scanner inFile;
@@ -316,6 +319,9 @@ public class Main {
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 target = chooser.getSelectedFile().toPath();  // this is a File object not a String filename
                 inFile = new Scanner(target);
+
+                // Clear the current list before loading a new oneJFileChooser chooser = new JFileChooser();
+                theList.clear();
 
                 while (inFile.hasNextLine()) {
                     line = inFile.nextLine();
